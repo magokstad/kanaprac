@@ -1,10 +1,9 @@
-use std::io::{self, Write};
-
 use clap::{Parser, ValueEnum};
-use colored::Colorize;
 
 mod mapping;
+mod io;
 use mapping::Mapping;
+use io::{get_user_translation, print_correct, print_wrong};
 
 
 // CLI STUFF
@@ -17,7 +16,7 @@ struct Cli {
     /// Which Kana to use
     #[arg(value_enum, default_value_t = Kana::Hira)]
     kana: Kana,
-    /// How many loops do you want
+    /// How many full loops
     #[arg(short, long)]
     iterations: Option<u8>,
 }
@@ -34,29 +33,11 @@ enum Kana {
 // END OF CLI STUFF
 
 
-fn gen_answer_string(mapping: &Mapping, kana: &String) -> String {
-    let romaji = mapping.get_romaji_from(kana);
-    let colored: Vec<String> = romaji.iter().map(|x| {x.yellow().to_string()}).collect();
-    colored.join(" or ")
-}
-
-fn gen_score_string(mapping: &Mapping) -> String{
-    let (hi, lo) = mapping.work_set_status();
-    return format!("({}/{})", lo, hi);
-}
-
 fn iteration(mapping: &mut Mapping) {
 
-    let mut input = String::new();
     let kana = mapping.get_random();
 
-    print!("{} ", kana);
-    io::stdout().flush().unwrap();
-
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-    input.pop();
+    let input = get_user_translation(&kana);
 
     let mut correct = false;
     for roma in mapping.get_romaji_from(&kana) {
@@ -65,21 +46,16 @@ fn iteration(mapping: &mut Mapping) {
         }
     } 
     if correct {
-        let has_more = mapping.remove(&kana);
-        println!("{}  Good! {}\n", "✓".green(), gen_score_string(&mapping));
-        if !has_more {
-            println!("{}", ">< >< FULL LOOP >< ><\n".blue())
-        }
+       print_correct(mapping, &kana) 
     } else {
-        println!("{}  {} was the right answer.\n", "✘".red(), gen_answer_string(&mapping, &kana));
+        print_wrong(mapping, &kana)
     }
 }
 
 fn game(kana: Kana, iterations: Option<u8>) {
-    let hira_data = include_str!("../data/hiragana.txt");
-    let kata_data = include_str!("../data/katakana.txt");
-    let hira_map = Mapping::from(hira_data).unwrap();
-    let kata_map = Mapping::from(kata_data).unwrap();
+    let hira_map = Mapping::from(include_str!("../data/hiragana.txt")).unwrap();
+    let kata_map = Mapping::from(include_str!("../data/katakana.txt")).unwrap();
+
     let mut map = match kana {
         Kana::Hira => hira_map,
         Kana::Kata => kata_map,

@@ -1,6 +1,7 @@
 use std::io;
 use std::collections::{HashMap, HashSet};
 use rand::seq::IteratorRandom;
+
 pub struct Mapping {
     map: HashMap<String, Vec<String>>,
     kana: HashSet<String>,
