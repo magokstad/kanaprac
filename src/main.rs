@@ -1,10 +1,9 @@
 use clap::{Parser, ValueEnum};
 
-mod mapping;
 mod io;
-use mapping::Mapping;
+mod mapping;
 use io::{get_user_translation, print_correct, print_wrong};
-
+use mapping::Mapping;
 
 // CLI STUFF
 #[derive(Parser)]
@@ -28,13 +27,11 @@ enum Kana {
     /// Only Katakana
     Kata,
     /// Both Hiragana and Katakana
-    Both
+    Both,
 }
 // END OF CLI STUFF
 
-
 fn iteration(mapping: &mut Mapping) {
-
     let kana = mapping.get_random();
 
     let input = get_user_translation(&kana);
@@ -44,9 +41,9 @@ fn iteration(mapping: &mut Mapping) {
         if roma.eq(&input) {
             correct = true;
         }
-    } 
+    }
     if correct {
-       print_correct(mapping, &kana) 
+        print_correct(mapping, &kana)
     } else {
         print_wrong(mapping, &kana)
     }
@@ -59,7 +56,7 @@ fn game(kana: Kana, iterations: Option<u8>) {
     let mut map = match kana {
         Kana::Hira => hira_map,
         Kana::Kata => kata_map,
-        Kana::Both => hira_map.join(&kata_map)
+        Kana::Both => hira_map.join(&kata_map),
     };
 
     match iterations {
@@ -67,12 +64,10 @@ fn game(kana: Kana, iterations: Option<u8>) {
             for _ in 0..iter {
                 iteration(&mut map);
             }
-        },
-        None => {
-            loop {
-                iteration(&mut map);
-            }
         }
+        None => loop {
+            iteration(&mut map);
+        },
     }
 }
 

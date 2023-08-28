@@ -1,21 +1,21 @@
-use std::io;
-use std::collections::{HashMap, HashSet};
 use rand::seq::IteratorRandom;
+use std::collections::{HashMap, HashSet};
+use std::io;
 
 pub struct Mapping {
     map: HashMap<String, Vec<String>>,
     kana: HashSet<String>,
     work_set: HashSet<String>,
-    loops: i32
+    loops: i32,
 }
 
 impl Mapping {
     fn new(map: &HashMap<String, Vec<String>>, kana: &HashSet<String>) -> Self {
-        Self { 
-            map: map.clone(), 
-            kana: kana.clone(), 
-            work_set: kana.clone(), 
-            loops: 0 
+        Self {
+            map: map.clone(),
+            kana: kana.clone(),
+            work_set: kana.clone(),
+            loops: 0,
         }
     }
 
@@ -24,17 +24,19 @@ impl Mapping {
     }
 
     pub fn join(&self, other: &Mapping) -> Mapping {
-        let map = self.map
+        let map = self
+            .map
             .clone()
             .into_iter()
             .chain(other.map.clone().into_iter())
             .collect();
-        let kana = self.kana
+        let kana = self
+            .kana
             .clone()
             .into_iter()
             .chain(other.kana.clone().into_iter())
             .collect();
-        return Mapping::new(&map, &kana);
+        Mapping::new(&map, &kana)
     }
 
     pub fn get_random(&mut self) -> String {
@@ -42,10 +44,11 @@ impl Mapping {
         self.work_set
             .iter()
             .choose(&mut rand::thread_rng())
-            .expect("bad").to_owned()
+            .expect("bad")
+            .to_owned()
     }
 
-    pub fn remove(&mut self, kana: &String) -> bool {
+    pub fn remove(&mut self, kana: &str) -> bool {
         self.work_set.remove(kana);
         self.ensure_not_empty()
     }
@@ -63,23 +66,23 @@ impl Mapping {
             self.work_set = self.kana.clone();
             self.loops += 1;
             return false;
-        } 
-        return true;
+        }
+        true
     }
 
     fn parse_mapping(data: &str) -> io::Result<Mapping> {
-        let mut map : HashMap<String, Vec<String>> = HashMap::new(); 
+        let mut map: HashMap<String, Vec<String>> = HashMap::new();
         let mut kana: HashSet<String> = HashSet::new();
 
         for line in data.lines() {
             let parts: Vec<&str> = line.split_ascii_whitespace().collect();
-            if parts.len() == 0 {
-                continue
+            if parts.is_empty() {
+                continue;
             }
             if parts.len() == 1 {
                 return Err(io::Error::new(
-                    io::ErrorKind::InvalidData, 
-                    format!("Bad number of arguments on this line: {}", line)
+                    io::ErrorKind::InvalidData,
+                    format!("Bad number of arguments on this line: {}", line),
                 ));
             }
             map.entry(parts[0].to_string()).or_insert(vec![]);
